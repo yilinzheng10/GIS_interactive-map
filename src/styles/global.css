@@ -111,3 +111,7 @@ h5 {
 .maplibre-inline {
   margin-bottom: 1rem;
 }
+
+a {
+  color: rgb(236, 55, 19);
+}
