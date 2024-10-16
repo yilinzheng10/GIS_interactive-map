@@ -1,31 +1,61 @@
 ---
 import maplibregl from "maplibre-gl";
-import type { FillLayerSpecification, CircleLayerSpecification, LineLayerSpecification, SymbolLayerSpecification } from "maplibre-gl";
+import type {
+  FillLayerSpecification,
+  CircleLayerSpecification,
+  LineLayerSpecification,
+  SymbolLayerSpecification,
+} from "maplibre-gl";
 
 export interface Props {
-  latitude: number
-  longitude: number
-  zoom: number
-  mapstyle: string
-  container: string
+  latitude: number;
+  longitude: number;
+  zoom: number;
+  mapstyle: string;
+  container: string;
 
   /** If `false`, the map will not respond to interaction.  This is a static map built with the full web map rendering API. */
-  interactive?: boolean
-  containerstyle?: string
-  pitch?: number
-  bearing?: number
-  layers?: GeoJSONFeatureLayer[]
+  interactive?: boolean;
+  containerstyle?: string;
+  pitch?: number;
+  bearing?: number;
+  layers?: GeoJSONFeatureLayer[];
 }
 
 export interface GeoJSONFeatureLayer {
-  type: "geojson"
-  id: string
-  url: string
-  layerType: "symbol" | "fill" | "custom" | "raster" | "line" | "circle" | "heatmap" | "fill-extrusion" | "hillshade" | "background"
-  paint?: FillLayerSpecification | LineLayerSpecification | CircleLayerSpecification | SymbolLayerSpecification
+  type: "geojson";
+  id: string;
+  url: string;
+  layerType:
+    | "symbol"
+    | "fill"
+    | "custom"
+    | "raster"
+    | "line"
+    | "circle"
+    | "heatmap"
+    | "fill-extrusion"
+    | "hillshade"
+    | "background";
+  paint?:
+    | FillLayerSpecification
+    | LineLayerSpecification
+    | CircleLayerSpecification
+    | SymbolLayerSpecification;
 }
 
-const { latitude, longitude, zoom, mapstyle, container, interactive, containerstyle = "height: 61.8vh", pitch, bearing, layers} = Astro.props;
+const {
+  latitude,
+  longitude,
+  zoom,
+  mapstyle,
+  container,
+  interactive,
+  containerstyle = "height: 61.8vh",
+  pitch,
+  bearing,
+  layers,
+} = Astro.props;
 const layersJson = layers ? JSON.stringify(layers) : undefined;
 ---
 
@@ -41,63 +71,104 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
   data-bearing={bearing}
   data-layers={layersJson}
 >
-<div id={container} style={containerstyle}></div>
+  <div id={container} style={containerstyle}></div>
 
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" />
-{
-  /* Astro specific way to pull in MapLibre, `is:inline`:  https://docs.astro.build/en/reference/directives-reference/#isinline */
-}
-<script is:inline src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
-<script>
-import type { CircleLayerSpecification, FillLayerSpecification, LineLayerSpecification, SymbolLayerSpecification } from "maplibre-gl";
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css"
+  />
+  {
+    /* Astro specific way to pull in MapLibre, `is:inline`:  https://docs.astro.build/en/reference/directives-reference/#isinline */
+  }
+  <script is:inline src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"
+  ></script>
+  <script>
+    import type {
+      CircleLayerSpecification,
+      FillLayerSpecification,
+      LineLayerSpecification,
+      SymbolLayerSpecification,
+    } from "maplibre-gl";
 
-  class MapLibreMap extends HTMLElement {
-    constructor() {
-      super();
+    class MapLibreMap extends HTMLElement {
+      constructor() {
+        super();
+        // @ts-expect-error this is the proper import and reference method
+        // eslint-disable-next-line no-undef
+        var map = new maplibregl.Map({
+          container: this.dataset.container,
+          interactive: JSON.parse(this.dataset.interactive),
+          center: [this.dataset.longitude, this.dataset.latitude],
+          zoom: this.dataset.zoom,
+          style: this.dataset.mapstyle,
+        });
 
-      var map = new maplibregl.Map({
-        container: this.dataset.container,
-        interactive: JSON.parse(this.dataset.interactive),
-        center: [this.dataset.longitude, this.dataset.latitude],
-        zoom: this.dataset.zoom,
-        style: this.dataset.mapstyle
-      });
-
-      map.on("load", () => {        
-        if (this.dataset.layers) {            
-              
+        map.on("load", () => {
+          if (this.dataset.layers) {
             const layers = JSON.parse(this.dataset.layers);
-            
-            layers.forEach((layer: { url: string | URL | Request; id: string; layerType: "symbol" | "fill" | "custom" | "raster" | "line" | "circle" | "heatmap" | "fill-extrusion" | "hillshade" | "background"; paint: FillLayerSpecification | LineLayerSpecification | CircleLayerSpecification | SymbolLayerSpecification }) => {
-                fetch(layer.url).then(res => res.json()).then(data => {
-                    
-                    data.features.forEach((feature: { geometry: { type: string; coordinates: number[]; }; properties: { longitude: number; latitude: number; }; }) => {
+
+            layers.forEach(
+              (layer: {
+                type: "geojson";
+                url: string | URL | Request;
+                id: string;
+                layerType:
+                  | "symbol"
+                  | "fill"
+                  | "custom"
+                  | "raster"
+                  | "line"
+                  | "circle"
+                  | "heatmap"
+                  | "fill-extrusion"
+                  | "hillshade"
+                  | "background";
+                paint:
+                  | FillLayerSpecification
+                  | LineLayerSpecification
+                  | CircleLayerSpecification
+                  | SymbolLayerSpecification;
+              }) => {
+                fetch(layer.url)
+                  .then((res) => res.json())
+                  .then((data) => {
+                    data.features.forEach(
+                      (feature: {
+                        geometry: { type: string; coordinates: number[] };
+                        properties: { longitude: number; latitude: number };
+                      }) => {
                         feature.geometry = {
-                        type: "Point",
-                        coordinates: [Number(feature.properties.longitude), Number(feature.properties.latitude)]
+                          type: "Point",
+                          coordinates: [
+                            Number(feature.properties.longitude),
+                            Number(feature.properties.latitude),
+                          ],
                         };
-                    });
-                    
+                      }
+                    );
+
                     // Add the source and layer to the map
                     map.addSource(layer.id, {
-                        type: "geojson",
-                        data: data // Use the resolved data here
+                      type: layer.type,
+                      data: data, // Use the resolved data here
                     });
-                                        
-                    map.addLayer({
-                        id: layer.id,
-                        type: layer.layerType,
-                        // @ts-expect-error expect source to be string via source above
-                        source: layer.id,
-                        // @ts-expect-error expect partial paint defs
-                        paint: layer.paint || {} // Include paint if it exists
-                    });
-                });                                                       
-            });
-        }
-      });
-    }
-  }
 
-  window.customElements.define("maplibre-map", MapLibreMap);
-</script>
+                    map.addLayer({
+                      id: layer.id,
+                      type: layer.layerType,
+                      // @ts-expect-error expect source to be string via source above
+                      source: layer.id,
+                      // @ts-expect-error expect partial paint defs
+                      paint: layer.paint || {}, // Include paint if it exists
+                    });
+                  });
+              }
+            );
+          }
+        });
+      }
+    }
+
+    window.customElements.define("maplibre-map", MapLibreMap);
+  </script></maplibre-map
+>
