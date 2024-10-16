@@ -1,6 +1,6 @@
 ---
 import maplibregl from "maplibre-gl";
-import type { LineLayout, SymbolLayout, FillPaint, LinePaint, SymbolPaint } from "maplibre-gl";
+import type { FillLayerSpecification, CircleLayerSpecification, LineLayerSpecification, SymbolLayerSpecification } from "maplibre-gl";
 
 export interface Props {
   latitude: number
@@ -19,13 +19,14 @@ export interface Props {
 
 export interface GeoJSONFeatureLayer {
   type: "geojson"
+  id: string
   url: string
-  layout?: maplibregl.FillLayout | maplibregl.LineLayout | maplibregl.SymbolLayout
-  paint?: maplibregl.FillPaint | maplibregl.LinePaint | maplibregl.SymbolPaint
+  layerType: "symbol" | "fill" | "custom" | "raster" | "line" | "circle" | "heatmap" | "fill-extrusion" | "hillshade" | "background"
+  paint?: FillLayerSpecification | LineLayerSpecification | CircleLayerSpecification | SymbolLayerSpecification
 }
 
-const { latitude, longitude, zoom, mapstyle, container, interactive, containerstyle = "height: 61.8vh"} = Astro.props;
-
+const { latitude, longitude, zoom, mapstyle, container, interactive, containerstyle = "height: 61.8vh", pitch, bearing, layers} = Astro.props;
+const layersJson = layers ? JSON.stringify(layers) : undefined;
 ---
 
 <maplibre-map
@@ -36,6 +37,9 @@ const { latitude, longitude, zoom, mapstyle, container, interactive, containerst
   data-container={container}
   data-interactive={interactive}
   data-containerstyle={containerstyle}
+  data-pitch={pitch}
+  data-bearing={bearing}
+  data-layers={layersJson}
 >
 <div id={container} style={containerstyle}></div>
 
@@ -45,6 +49,8 @@ const { latitude, longitude, zoom, mapstyle, container, interactive, containerst
 }
 <script is:inline src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
 <script>
+import type { CircleLayerSpecification, FillLayerSpecification, LineLayerSpecification, SymbolLayerSpecification } from "maplibre-gl";
+
   class MapLibreMap extends HTMLElement {
     constructor() {
       super();
@@ -55,6 +61,40 @@ const { latitude, longitude, zoom, mapstyle, container, interactive, containerst
         center: [this.dataset.longitude, this.dataset.latitude],
         zoom: this.dataset.zoom,
         style: this.dataset.mapstyle
+      });
+
+      map.on("load", () => {        
+        if (this.dataset.layers) {            
+              
+            const layers = JSON.parse(this.dataset.layers);
+            
+            layers.forEach((layer: { url: string | URL | Request; id: string; layerType: "symbol" | "fill" | "custom" | "raster" | "line" | "circle" | "heatmap" | "fill-extrusion" | "hillshade" | "background"; paint: FillLayerSpecification | LineLayerSpecification | CircleLayerSpecification | SymbolLayerSpecification }) => {
+                fetch(layer.url).then(res => res.json()).then(data => {
+                    
+                    data.features.forEach((feature: { geometry: { type: string; coordinates: number[]; }; properties: { longitude: number; latitude: number; }; }) => {
+                        feature.geometry = {
+                        type: "Point",
+                        coordinates: [Number(feature.properties.longitude), Number(feature.properties.latitude)]
+                        };
+                    });
+                    
+                    // Add the source and layer to the map
+                    map.addSource(layer.id, {
+                        type: "geojson",
+                        data: data // Use the resolved data here
+                    });
+                                        
+                    map.addLayer({
+                        id: layer.id,
+                        type: layer.layerType,
+                        // @ts-expect-error expect source to be string via source above
+                        source: layer.id,
+                        // @ts-expect-error expect partial paint defs
+                        paint: layer.paint || {} // Include paint if it exists
+                    });
+                });                                                       
+            });
+        }
       });
     }
   }
