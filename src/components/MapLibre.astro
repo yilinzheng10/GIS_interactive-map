@@ -97,10 +97,13 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
         // @ts-expect-error this is the proper import and reference method
         // eslint-disable-next-line no-undef
         var map = new maplibregl.Map({
-          container: this.dataset.container,
-          interactive: JSON.parse(this.dataset.interactive),
-          center: [this.dataset.longitude, this.dataset.latitude],
-          zoom: this.dataset.zoom,
+          container: this.dataset.container || "maplibre-map",
+          interactive: this.dataset.interactive ? JSON.parse(this.dataset.interactive) : false,
+          center: [
+            this.dataset.longitude ? parseFloat(this.dataset.longitude) : 0,
+            this.dataset.latitude ? parseFloat(this.dataset.latitude) : 0,
+          ],
+          zoom: this.dataset.zoom ? parseFloat(this.dataset.zoom) : undefined,
           style: this.dataset.mapstyle,
         });
 
