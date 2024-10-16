@@ -23,7 +23,7 @@ export interface Props {
 }
 
 export interface GeoJSONFeatureLayer {
-  type: "geojson";
+  dataType: "geojson";
   id: string;
   url: string;
   layerType:
@@ -109,7 +109,7 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
 
             layers.forEach(
               (layer: {
-                type: "geojson";
+                dataType: "geojson";
                 url: string | URL | Request;
                 id: string;
                 layerType:
@@ -132,24 +132,27 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
                 fetch(layer.url)
                   .then((res) => res.json())
                   .then((data) => {
+                    // Modify the data to fit the expected format  
                     data.features.forEach(
                       (feature: {
                         geometry: { type: string; coordinates: number[] };
                         properties: { longitude: number; latitude: number };
                       }) => {
-                        feature.geometry = {
-                          type: "Point",
-                          coordinates: [
-                            Number(feature.properties.longitude),
-                            Number(feature.properties.latitude),
-                          ],
-                        };
+                        // check if there's already a valid geometry, otherwise reconstruct it
+                        if (!feature.geometry) {
+                          feature.geometry = {
+                            type: "Point",
+                            coordinates: [
+                              Number(feature.properties.longitude),
+                              Number(feature.properties.latitude),
+                            ],
+                          };
+                        }
                       }
                     );
-
                     // Add the source and layer to the map
                     map.addSource(layer.id, {
-                      type: layer.type,
+                      type: layer.dataType,
                       data: data, // Use the resolved data here
                     });
 
