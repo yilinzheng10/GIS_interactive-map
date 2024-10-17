@@ -16,6 +16,7 @@ const { title, description } = Astro.props;
 <html lang="en">
   <head>
     <Head title={`${title} | ${SITE.NAME}`} description={description} />
+    <script data-astro-rerun src="https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.js"></script>
   </head>
   <body>
     <Header />
