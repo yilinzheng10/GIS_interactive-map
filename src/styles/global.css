@@ -133,10 +133,10 @@ main {
 
 /* Each section represents a new scrolling block */
 section {
-  width: 100%;
-  padding: 10vh 10vw; /* Adds padding to each section for better readability */
-  min-height: 100vh; /* Each section takes up at least the full viewport height */
-  background-color: rgba(255, 255, 255, 0.8); /* Slight transparency over the map */
+  width: 50%;
+  padding: 20vh 10vw; /* Adds padding to each section for better readability */
+  min-height: 150vh; /* Each section takes up at least the full viewport height */
+  background-color: rgba(255, 255, 255, 0.2); /* Slight transparency over the map */
   border-bottom: 1px solid #ddd; /* Optional separator between sections */
   box-sizing: border-box;
 }

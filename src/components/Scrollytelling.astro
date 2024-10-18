@@ -116,14 +116,17 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
               const observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
                   if (entry.isIntersecting) {
-                    const centerAttr = entry.target.getAttribute("data-center");
-                    const center = centerAttr ? JSON.parse(centerAttr) : null;
-                    const zoom = entry.target.getAttribute("data-zoom");
+                    const mapOptionsAttr = entry.target.getAttribute("data-map-options");
+                    const mapOptions = mapOptionsAttr ? JSON.parse(mapOptionsAttr) : {};
+                    const centerAttr = mapOptions.center;
+                    const center = centerAttr ? centerAttr : null;
+                    const zoom = mapOptions.zoom;
 
                     // Update the MapLibre map
                     map.flyTo({
                       center: center,
                       zoom: zoom ? parseFloat(zoom) : undefined,
+                      essential: true
                     });
                   }
                 });
@@ -146,11 +149,15 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
         (heading: { content: string; slug: string; text: string }) => {
           const content = heading.content; // Full markdown content
           const directiveMatch = content.match(/<!--\s*{(.+?)}\s*-->/); // Regex to match JSON within HTML comments
+          const imageMatch = content.match(/!\[.*?\]\((.*?)\)/); // Regex to capture image URL
+          
+          const imageUrl = imageMatch ? imageMatch[1] : null;
 
           let mapOptions = {};
           if (directiveMatch) {
             try {
               mapOptions = JSON.parse(`{${directiveMatch[1]}}`); // Parse map options from comment
+              alert(mapOptions);
             } catch (error) {
               console.error("Error parsing map options:", error);
             }
@@ -162,8 +169,10 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
               data-map-options={JSON.stringify(mapOptions)}
             >
               <h2>{heading.text}</h2>
-              <p>{content.replace(/<!--.*-->/, "")}</p>{" "}
-              {/* Render content without map directives */}
+              <p>{content.replace(/<!--.*-->/, "").replace(/!\[.*?\]\((.*?)\)/, "")}</p>{" "}
+              
+              {imageUrl ? <img src={imageUrl} alt={heading.text} style={{ width: "100%" }} />: null} 
+
             </section>
           );
         }
