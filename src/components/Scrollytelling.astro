@@ -1,0 +1,169 @@
+---
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import maplibregl from "maplibre-gl";
+import type {
+  FillLayerSpecification,
+  CircleLayerSpecification,
+  LineLayerSpecification,
+  SymbolLayerSpecification,
+} from "maplibre-gl";
+import { useEffect } from "react";
+import markdownContent from "../pages/example_scrollytelling.md"; // Assuming markdown is under pages directory
+const sections = markdownContent;
+
+export interface Props {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+  mapstyle: string;
+  container: string;
+
+  /** If `false`, the map will not respond to interaction.  This is a static map built with the full web map rendering API. */
+  interactive?: boolean;
+  containerstyle?: string;
+  pitch?: number;
+  bearing?: number;
+  layers?: GeoJSONFeatureLayer[];
+}
+
+export interface GeoJSONFeatureLayer {
+  dataType: "geojson";
+  id: string;
+  url: string;
+  layerType:
+    | "symbol"
+    | "fill"
+    | "custom"
+    | "raster"
+    | "line"
+    | "circle"
+    | "heatmap"
+    | "fill-extrusion"
+    | "hillshade"
+    | "background";
+  paint?:
+    | FillLayerSpecification
+    | LineLayerSpecification
+    | CircleLayerSpecification
+    | SymbolLayerSpecification;
+}
+
+const {
+  latitude,
+  longitude,
+  zoom,
+  mapstyle,
+  container,
+  interactive,
+  containerstyle = "height: 61.8vh",
+  pitch,
+  bearing,
+  layers,
+} = Astro.props;
+const layersJson = layers ? JSON.stringify(layers) : undefined;
+---
+
+<maplibre-map
+  data-latitude={latitude}
+  data-longitude={longitude}
+  data-zoom={zoom}
+  data-mapstyle={mapstyle}
+  data-container={container}
+  data-interactive={interactive}
+  data-containerstyle={containerstyle}
+  data-pitch={pitch}
+  data-bearing={bearing}
+  data-layers={layersJson}
+>
+  <div class="scrollytelling-container">
+    <main>
+      {
+        sections.map(
+          (section: {
+            mapSlide: string;
+            center: [number, number];
+            zoom: number;
+            title: string;
+            content: string;
+          }) => (
+            <section
+              data-slide={section.mapSlide}
+              data-center={JSON.stringify(section.center)}
+              data-zoom={section.zoom}
+            >
+              <h2>{section.title}</h2>
+              <p>{section.content}</p>
+            </section>
+          )
+        )
+      }
+    </main>
+
+    <div
+      id={container}
+      style={{ width: "100vw", height: "100vh" }}
+      class="maplibre-inline"
+    >
+    </div>
+  </div>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css"
+  />
+  {
+    /* Astro specific way to pull in MapLibre, `is:inline`:  https://docs.astro.build/en/reference/directives-reference/#isinline */
+  }
+
+  <script>
+    // import type {
+    //   CircleLayerSpecification,
+    //   FillLayerSpecification,
+    //   LineLayerSpecification,
+    //   SymbolLayerSpecification,
+    // } from "maplibre-gl";
+
+    class MapLibreMap extends HTMLElement {
+      constructor() {
+        super();
+        // @ts-expect-error this is the proper import and reference method
+        // eslint-disable-next-line no-undef
+        var map = new maplibregl.Map({
+          container: this.dataset.container || "maplibre-map",
+          interactive: this.dataset.interactive
+            ? JSON.parse(this.dataset.interactive)
+            : false,
+          center: [
+            this.dataset.longitude ? parseFloat(this.dataset.longitude) : 0,
+            this.dataset.latitude ? parseFloat(this.dataset.latitude) : 0,
+          ],
+          zoom: this.dataset.zoom ? parseFloat(this.dataset.zoom) : undefined,
+          style: this.dataset.mapstyle,
+        });
+
+        map.on("load", () => {
+          const sections = document.querySelectorAll("section");
+
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                const centerAttr = entry.target.getAttribute("data-center");
+                const center = centerAttr ? JSON.parse(centerAttr) : null;
+                const zoom = entry.target.getAttribute("data-zoom");
+
+                // Update the MapLibre map
+                map.flyTo({
+                  center: center,
+                  zoom: zoom ? parseFloat(zoom) : undefined,
+                });
+              }
+            });
+          });
+
+          sections.forEach((section) => observer.observe(section));
+        });
+      }
+    }
+
+    window.customElements.define("maplibre-map", MapLibreMap);
+  </script></maplibre-map
+>
