@@ -4,10 +4,7 @@ import { SITE } from "@consts";
 import { default as STM } from "@components/Scrollytelling.astro";
 
 <PageLayout title={SITE.title} description={SITE.description}>
-    <div style={{
-        width: '100%',        
-        overflowY: 'hidden',
-    }}>
+   
     <STM
         container="maplibremap"
         latitude={40.8075803}
@@ -22,7 +19,5 @@ import { default as STM } from "@components/Scrollytelling.astro";
             
         ]}
     />
-
-    </div>
 
 </PageLayout>

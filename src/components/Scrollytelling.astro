@@ -7,9 +7,14 @@ import type {
   LineLayerSpecification,
   SymbolLayerSpecification,
 } from "maplibre-gl";
-import { useEffect } from "react";
-import markdownContent from "../pages/example_scrollytelling.md"; // Assuming markdown is under pages directory
-const sections = markdownContent;
+import markdownContent from "../pages/example_scrollytelling.md?raw"; // Assuming markdown is under pages directory
+
+const headings = markdownContent.match(/#+\s.+/g)?.map((heading) => {
+  const text = heading.replace(/#+\s/, "");
+  const slug = text.toLowerCase().replace(/\s/g, "-");
+  const content = markdownContent.split(heading)[1].split(/#+\s/)[0];
+  return { text, slug, content };
+});
 
 export interface Props {
   latitude: number;
@@ -63,107 +68,106 @@ const {
 const layersJson = layers ? JSON.stringify(layers) : undefined;
 ---
 
-<maplibre-map
-  data-latitude={latitude}
-  data-longitude={longitude}
-  data-zoom={zoom}
-  data-mapstyle={mapstyle}
-  data-container={container}
-  data-interactive={interactive}
-  data-containerstyle={containerstyle}
-  data-pitch={pitch}
-  data-bearing={bearing}
-  data-layers={layersJson}
->
-  <div class="scrollytelling-container">
-    <main>
-      {
-        sections.map(
-          (section: {
-            mapSlide: string;
-            center: [number, number];
-            zoom: number;
-            title: string;
-            content: string;
-          }) => (
-            <section
-              data-slide={section.mapSlide}
-              data-center={JSON.stringify(section.center)}
-              data-zoom={section.zoom}
-            >
-              <h2>{section.title}</h2>
-              <p>{section.content}</p>
-            </section>
-          )
-        )
-      }
-    </main>
-
-    <div
-      id={container}
-      style={{ width: "100vw", height: "100vh" }}
-      class="maplibre-inline"
+<div class="scrollytelling-container">
+  <!-- Map Container -->
+  <div
+    id={container}
+    class="maplibre-inline map-container"
+    style={{ width: "100vw", height: "100vh" }}
+  >
+    <maplibre-map
+      data-latitude={latitude}
+      data-longitude={longitude}
+      data-zoom={zoom}
+      data-mapstyle={mapstyle}
+      data-container={container}
+      data-interactive={interactive}
+      data-containerstyle={containerstyle}
+      data-pitch={pitch}
+      data-bearing={bearing}
+      data-layers={layersJson}
     >
-    </div>
-  </div>
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css"
-  />
-  {
-    /* Astro specific way to pull in MapLibre, `is:inline`:  https://docs.astro.build/en/reference/directives-reference/#isinline */
-  }
-
-  <script>
-    // import type {
-    //   CircleLayerSpecification,
-    //   FillLayerSpecification,
-    //   LineLayerSpecification,
-    //   SymbolLayerSpecification,
-    // } from "maplibre-gl";
-
-    class MapLibreMap extends HTMLElement {
-      constructor() {
-        super();
-        // @ts-expect-error this is the proper import and reference method
-        // eslint-disable-next-line no-undef
-        var map = new maplibregl.Map({
-          container: this.dataset.container || "maplibre-map",
-          interactive: this.dataset.interactive
-            ? JSON.parse(this.dataset.interactive)
-            : false,
-          center: [
-            this.dataset.longitude ? parseFloat(this.dataset.longitude) : 0,
-            this.dataset.latitude ? parseFloat(this.dataset.latitude) : 0,
-          ],
-          zoom: this.dataset.zoom ? parseFloat(this.dataset.zoom) : undefined,
-          style: this.dataset.mapstyle,
-        });
-
-        map.on("load", () => {
-          const sections = document.querySelectorAll("section");
-
-          const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                const centerAttr = entry.target.getAttribute("data-center");
-                const center = centerAttr ? JSON.parse(centerAttr) : null;
-                const zoom = entry.target.getAttribute("data-zoom");
-
-                // Update the MapLibre map
-                map.flyTo({
-                  center: center,
-                  zoom: zoom ? parseFloat(zoom) : undefined,
-                });
-              }
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css"
+      />
+      <script>
+        class MapLibreMap extends HTMLElement {
+          constructor() {
+            super();
+            var map = new maplibregl.Map({
+              container: this.dataset.container || "maplibre-map",
+              interactive: this.dataset.interactive
+                ? JSON.parse(this.dataset.interactive)
+                : false,
+              center: [
+                this.dataset.longitude ? parseFloat(this.dataset.longitude) : 0,
+                this.dataset.latitude ? parseFloat(this.dataset.latitude) : 0,
+              ],
+              zoom: this.dataset.zoom
+                ? parseFloat(this.dataset.zoom)
+                : undefined,
+              style: this.dataset.mapstyle,
             });
-          });
 
-          sections.forEach((section) => observer.observe(section));
-        });
-      }
+            map.on("load", () => {
+              const sections = document.querySelectorAll("section");
+
+              const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                  if (entry.isIntersecting) {
+                    const centerAttr = entry.target.getAttribute("data-center");
+                    const center = centerAttr ? JSON.parse(centerAttr) : null;
+                    const zoom = entry.target.getAttribute("data-zoom");
+
+                    // Update the MapLibre map
+                    map.flyTo({
+                      center: center,
+                      zoom: zoom ? parseFloat(zoom) : undefined,
+                    });
+                  }
+                });
+              });
+
+              sections.forEach((section) => observer.observe(section));
+            });
+          }
+        }
+
+        window.customElements.define("maplibre-map", MapLibreMap);
+      </script>
+    </maplibre-map>
+  </div>
+
+  <!-- Scrolling Content -->
+  <main>
+    {
+      (headings ?? []).map(
+        (heading: { content: string; slug: string; text: string }) => {
+          const content = heading.content; // Full markdown content
+          const directiveMatch = content.match(/<!--\s*{(.+?)}\s*-->/); // Regex to match JSON within HTML comments
+
+          let mapOptions = {};
+          if (directiveMatch) {
+            try {
+              mapOptions = JSON.parse(`{${directiveMatch[1]}}`); // Parse map options from comment
+            } catch (error) {
+              console.error("Error parsing map options:", error);
+            }
+          }
+
+          return (
+            <section
+              id={`section-${heading.slug}`}
+              data-map-options={JSON.stringify(mapOptions)}
+            >
+              <h2>{heading.text}</h2>
+              <p>{content.replace(/<!--.*-->/, "")}</p>{" "}
+              {/* Render content without map directives */}
+            </section>
+          );
+        }
+      )
     }
-
-    window.customElements.define("maplibre-map", MapLibreMap);
-  </script></maplibre-map
->
+  </main>
+</div>

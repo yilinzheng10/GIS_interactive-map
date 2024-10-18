@@ -115,3 +115,41 @@ h5 {
 a {
   color: rgb(236, 55, 19);
 }
+
+.scrollytelling-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh; /* Full viewport height */
+}
+
+main {
+  position: relative;
+  z-index: 2; /* Above the map */
+  width: 100%;
+  height: auto;
+  overflow-y: auto;
+  scroll-behavior: smooth; /* Optional: smooth scrolling between sections */
+}
+
+/* Each section represents a new scrolling block */
+section {
+  width: 100%;
+  padding: 10vh 10vw; /* Adds padding to each section for better readability */
+  min-height: 100vh; /* Each section takes up at least the full viewport height */
+  background-color: rgba(255, 255, 255, 0.8); /* Slight transparency over the map */
+  border-bottom: 1px solid #ddd; /* Optional separator between sections */
+  box-sizing: border-box;
+}
+
+.map-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh; /* Full viewport height */
+  z-index: 1; /* Behind the scrolling content */
+}
+
+#maplibremap {
+  position:fixed
+}
