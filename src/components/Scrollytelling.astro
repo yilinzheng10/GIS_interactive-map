@@ -7,7 +7,7 @@ import type {
   LineLayerSpecification,
   SymbolLayerSpecification,
 } from "maplibre-gl";
-import markdownContent from "../pages/example_scrollytelling.md?raw"; // Assuming markdown is under pages directory
+import markdownContent from "../pages/scrollytelling_steps.md?raw"; // Assuming markdown is under pages directory
 
 const headings = markdownContent.match(/#+\s.+/g)?.map((heading) => {
   const text = heading.replace(/#+\s/, "");
@@ -170,7 +170,7 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
             >
               <h2>{heading.text}</h2>
               <p>{content.replace(/<!--.*-->/, "").replace(/!\[.*?\]\((.*?)\)/, "")}</p>{" "}
-              
+
               {imageUrl ? <img src={imageUrl} alt={heading.text} style={{ width: "100%" }} />: null} 
 
             </section>
