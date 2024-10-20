@@ -6,8 +6,29 @@ import type {
   CircleLayerSpecification,
   LineLayerSpecification,
   SymbolLayerSpecification,
+  LngLatLike
 } from "maplibre-gl";
 import markdownContent from "../pages/scrollytelling_steps.md?raw"; // Assuming markdown is under pages directory
+
+import fs from "fs";
+import yaml from "js-yaml";
+
+// Load and parse the YAML file
+const fileContents = fs.readFileSync(
+  "src/pages/scrollytelling_steps.yaml",
+  "utf8"
+);
+interface MapStep {
+  title: string;
+  description: string;
+  center: [number, number];
+  zoom: number;
+  pitch?: number;
+  bearing?: number;
+  media?: string;
+}
+
+const mapData: MapStep[] = yaml.load(fileContents) as MapStep[];
 
 const headings = markdownContent.match(/#+\s.+/g)?.map((heading) => {
   const text = heading.replace(/#+\s/, "");
@@ -115,18 +136,16 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
 
               const observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
-                  if (entry.isIntersecting) {
-                    const mapOptionsAttr = entry.target.getAttribute("data-map-options");
-                    const mapOptions = mapOptionsAttr ? JSON.parse(mapOptionsAttr) : {};
-                    const centerAttr = mapOptions.center;
-                    const center = centerAttr ? centerAttr : null;
-                    const zoom = mapOptions.zoom;
+                  if (entry.isIntersecting) {                    
+                    const centerAttr = entry.target.getAttribute("data-center");
+                    const center = centerAttr ? JSON.parse(centerAttr) : undefined;
+                    const zoom = entry.target.getAttribute("data-zoom");
 
                     // Update the MapLibre map
                     map.flyTo({
-                      center: center,
+                      center: center as maplibregl.LngLatLike,
                       zoom: zoom ? parseFloat(zoom) : undefined,
-                      essential: true
+                      essential: true,
                     });
                   }
                 });
@@ -145,38 +164,19 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
   <!-- Scrolling Content -->
   <main>
     {
-      (headings ?? []).map(
-        (heading: { content: string; slug: string; text: string }) => {
-          const content = heading.content; // Full markdown content
-          const directiveMatch = content.match(/<!--\s*{(.+?)}\s*-->/); // Regex to match JSON within HTML comments
-          const imageMatch = content.match(/!\[.*?\]\((.*?)\)/); // Regex to capture image URL
-          
-          const imageUrl = imageMatch ? imageMatch[1] : null;
-
-          let mapOptions = {};
-          if (directiveMatch) {
-            try {
-              mapOptions = JSON.parse(`{${directiveMatch[1]}}`); // Parse map options from comment
-              alert(mapOptions);
-            } catch (error) {
-              console.error("Error parsing map options:", error);
-            }
-          }
-
-          return (
-            <section
-              id={`section-${heading.slug}`}
-              data-map-options={JSON.stringify(mapOptions)}
-            >
-              <h2>{heading.text}</h2>
-              <p>{content.replace(/<!--.*-->/, "").replace(/!\[.*?\]\((.*?)\)/, "")}</p>{" "}
-
-              {imageUrl ? <img src={imageUrl} alt={heading.text} style={{ width: "100%" }} />: null} 
-
-            </section>
-          );
-        }
-      )
+      mapData.map((step, index) => (
+        <section
+          id={`section-${index}`}
+          data-center={JSON.stringify(step.center)}
+          data-zoom={step.zoom}
+          data-pitch={step.pitch}
+          data-bearing={step.bearing}
+        >
+          <h2>{step.title}</h2>
+          <p>{step.description}</p>
+          {step.media ? <img src={step.media} alt={step.title} /> : null}
+        </section>
+      ))
     }
   </main>
 </div>
