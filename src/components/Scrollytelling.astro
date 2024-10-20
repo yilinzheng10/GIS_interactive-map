@@ -6,10 +6,7 @@ import type {
   CircleLayerSpecification,
   LineLayerSpecification,
   SymbolLayerSpecification,
-  LngLatLike
 } from "maplibre-gl";
-import markdownContent from "../pages/scrollytelling_steps.md?raw"; // Assuming markdown is under pages directory
-
 import fs from "fs";
 import yaml from "js-yaml";
 
@@ -26,16 +23,10 @@ interface MapStep {
   pitch?: number;
   bearing?: number;
   media?: string;
+  position?: "left" | "right" | "centered" | "full";
 }
 
 const mapData: MapStep[] = yaml.load(fileContents) as MapStep[];
-
-const headings = markdownContent.match(/#+\s.+/g)?.map((heading) => {
-  const text = heading.replace(/#+\s/, "");
-  const slug = text.toLowerCase().replace(/\s/g, "-");
-  const content = markdownContent.split(heading)[1].split(/#+\s/)[0];
-  return { text, slug, content };
-});
 
 export interface Props {
   latitude: number;
@@ -141,6 +132,7 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
                     const center = centerAttr ? JSON.parse(centerAttr) : undefined;
                     const zoom = entry.target.getAttribute("data-zoom");
 
+                    entry.target.classList.add("active");
                     // Update the MapLibre map
                     map.flyTo({
                       center: center as maplibregl.LngLatLike,
@@ -149,7 +141,7 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
                     });
                   }
                 });
-              });
+              }, { threshold: 0.5 });
 
               sections.forEach((section) => observer.observe(section));
             });
@@ -171,10 +163,14 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
           data-zoom={step.zoom}
           data-pitch={step.pitch}
           data-bearing={step.bearing}
+          class:list={[step.position ? step.position : "lefty", "step"]}
         >
-          <h2>{step.title}</h2>
-          <p>{step.description}</p>
-          {step.media ? <img src={step.media} alt={step.title} /> : null}
+          <div class="step-content">
+            <h2>{step.title}</h2>
+            <p>{step.description}</p>
+            {step.media ? <img src={step.media} alt={step.title} /> : null}
+          </div>
+          
         </section>
       ))
     }
