@@ -131,13 +131,18 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
                     const centerAttr = entry.target.getAttribute("data-center");
                     const center = centerAttr ? JSON.parse(centerAttr) : undefined;
                     const zoom = entry.target.getAttribute("data-zoom");
+                    const pitch = entry.target.getAttribute("data-pitch");
+                    const bearing = entry.target.getAttribute("data-bearing");
 
                     entry.target.classList.add("active");
                     // Update the MapLibre map
                     map.flyTo({
                       center: center as maplibregl.LngLatLike,
                       zoom: zoom ? parseFloat(zoom) : undefined,
+                      pitch: pitch ? parseFloat(pitch) : undefined,
+                      bearing: bearing ? parseFloat(bearing) : undefined,
                       essential: true,
+
                     });
                   }
                 });
