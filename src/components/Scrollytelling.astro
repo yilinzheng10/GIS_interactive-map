@@ -24,6 +24,8 @@ interface MapStep {
   bearing?: number;
   media?: string;
   position?: "left" | "right" | "centered" | "full";
+  layers?: GeoJSONFeatureLayer[];
+  persist?: boolean;
 }
 
 const mapData: MapStep[] = yaml.load(fileContents) as MapStep[];
@@ -104,6 +106,9 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
         href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css"
       />
       <script>
+        import maplibregl from "maplibre-gl";
+        import type { GeoJSONFeatureLayer } from "./MapLibre.astro";
+
         class MapLibreMap extends HTMLElement {
           constructor() {
             super();
@@ -125,28 +130,115 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
             map.on("load", () => {
               const sections = document.querySelectorAll("section");
 
-              const observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                  if (entry.isIntersecting) {                    
-                    const centerAttr = entry.target.getAttribute("data-center");
-                    const center = centerAttr ? JSON.parse(centerAttr) : undefined;
-                    const zoom = entry.target.getAttribute("data-zoom");
-                    const pitch = entry.target.getAttribute("data-pitch");
-                    const bearing = entry.target.getAttribute("data-bearing");
+              const observer = new IntersectionObserver(
+                (entries) => {
+                  entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                      entry.target.classList.add("active");
 
-                    entry.target.classList.add("active");
-                    // Update the MapLibre map
-                    map.flyTo({
-                      center: center as maplibregl.LngLatLike,
-                      zoom: zoom ? parseFloat(zoom) : undefined,
-                      pitch: pitch ? parseFloat(pitch) : undefined,
-                      bearing: bearing ? parseFloat(bearing) : undefined,
-                      essential: true,
+                      const centerAttr =
+                        entry.target.getAttribute("data-center");
+                      const center = centerAttr
+                        ? JSON.parse(centerAttr)
+                        : undefined;
+                      const zoom = entry.target.getAttribute("data-zoom");
+                      const pitch = entry.target.getAttribute("data-pitch");
+                      const bearing = entry.target.getAttribute("data-bearing");
 
-                    });
-                  }
-                });
-              }, { threshold: 0.5 });
+                      // parse layers
+                      const layersAttr =
+                        entry.target.getAttribute("data-layers");
+                      const layers = layersAttr
+                        ? JSON.parse(layersAttr)
+                        : undefined;
+                      if (layers) {
+                        layers.forEach((layer: GeoJSONFeatureLayer) => {
+                          
+
+                          if (layer["data-type"] === "geojson") {
+                            fetch(layer.url)
+                              .then((response) => response.json())
+                              .then((data) => {
+                                data.features.forEach(
+                                  (feature: {
+                                    geometry: {
+                                      type: string;
+                                      coordinates: number[];
+                                    };
+                                    properties: {
+                                      longitude: number;
+                                      latitude: number;
+                                    };
+                                  }) => {
+                                    // check if there's already a valid geometry, otherwise reconstruct it
+                                    if (!feature.geometry) {
+                                      feature.geometry = {
+                                        type: "Point",
+                                        coordinates: [
+                                          Number(feature.properties.longitude),
+                                          Number(feature.properties.latitude),
+                                        ],
+                                      };
+                                    }
+                                  }
+                                );
+                                // if source already exists, continue, else add it
+                                if (!map.getSource(layer.id)) {
+                                  map.addSource(layer.id, {
+                                    type: "geojson",
+                                    data: data,
+                                  });
+                                }
+
+                                // if layer doesn't already exist, add it
+                                if (!map.getLayer(layer.id)) {
+                                  map.addLayer({
+                                    id: layer.id,
+                                    type: layer["layer-type"],
+                                    source: layer.id,
+                                    paint: layer.paint,
+                                  });
+                                }
+                              });
+                          }
+                        });
+                      }
+
+                      // Update the MapLibre map
+                      map.flyTo({
+                        center: center as maplibregl.LngLatLike,
+                        zoom: zoom ? parseFloat(zoom) : undefined,
+                        pitch: pitch ? parseFloat(pitch) : undefined,
+                        bearing: bearing ? parseFloat(bearing) : undefined,
+                        essential: true,
+                      });
+                    } else {
+                      if (!entry.target.getAttribute("data-persist")) {
+                        // Remove the active class from the section
+                        entry.target.classList.remove("active");
+
+                        // Remove the layers from the map
+                        const layersAttr =
+                          entry.target.getAttribute("data-layers");
+                        const layers = layersAttr
+                          ? JSON.parse(layersAttr)
+                          : undefined;
+                        if (layers) {
+                          layers.forEach((layer: GeoJSONFeatureLayer) => {
+                            if (map.getLayer(layer.id)) {
+                              map.removeLayer(layer.id);
+                            }
+                            if (map.getSource(layer.id)) {
+                              map.removeSource(layer.id);
+                            }
+                          });
+                        }
+                      }
+                    }
+                  });
+                },
+                { threshold: 0.5 }
+              );
 
               sections.forEach((section) => observer.observe(section));
             });
@@ -168,6 +260,7 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
           data-zoom={step.zoom}
           data-pitch={step.pitch}
           data-bearing={step.bearing}
+          data-layers={JSON.stringify(step.layers)}
           class:list={[step.position ? step.position : "lefty", "step"]}
         >
           <div class="step-content">
@@ -175,7 +268,6 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
             <p>{step.description}</p>
             {step.media ? <img src={step.media} alt={step.title} /> : null}
           </div>
-          
         </section>
       ))
     }
