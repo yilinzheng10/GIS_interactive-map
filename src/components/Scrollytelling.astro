@@ -109,7 +109,7 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
         import maplibregl from "maplibre-gl";
         import type { GeoJSONFeatureLayer } from "./MapLibre.astro";
 
-        class MapLibreMap extends HTMLElement {
+        class MapLibreScrollytellingMap extends HTMLElement {
           constructor() {
             super();
             var map = new maplibregl.Map({
@@ -245,7 +245,7 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
           }
         }
 
-        window.customElements.define("maplibre-map", MapLibreMap);
+        window.customElements.define("maplibre-map", MapLibreScrollytellingMap);
       </script>
     </maplibre-map>
   </div>
