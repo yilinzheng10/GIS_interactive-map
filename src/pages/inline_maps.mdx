@@ -20,7 +20,7 @@ import { default as MapLibre } from "@components/MapLibre.astro";
             { url:'https://data.cityofnewyork.us/resource/43nn-pn8j.geojson?cuisine_description=Pizza&$limit=10000', 'data-type':'geojson','layer-type':'circle', id:'pizza', paint:{'circle-color':'#ff0000','circle-radius':5},
             mouseEvent: [
                 {
-                    type: "click", // same concept should work for hover
+                    type: "click", // same concept should work for hover but need to test using mouseover, mouseenter, mouseleave
                     content: [
                         { "h2": [{'str':"Feature Info"}] }, // 
                         { "p": [{'str':"Description of feature"}] },
