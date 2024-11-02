@@ -67,7 +67,15 @@ const {
   bearing,
   layers,
 } = Astro.props;
-const layersJson = layers ? JSON.stringify(layers) : undefined;
+
+const customReplacer = (key, value) => {
+  if (typeof value === "function") {
+    return `(${value.toString()})`; // Wrap the function in parentheses
+  }
+  return value;
+};
+
+const layersJson = JSON.stringify(layers, customReplacer);
 ---
 
 <maplibre-map
@@ -122,7 +130,7 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
               fetch(layer.url)
                 .then((res) => res.json())
                 .then((data) => {
-                  // Modify the data to fit the expected format                  
+                  // Modify the data to fit the expected format
                   data.features.forEach(
                     (feature: {
                       geometry: { type: string; coordinates: number[] };
@@ -141,7 +149,6 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
                     }
                   );
                   // Add the source and layer to the map
-                  alert(layer["layer-type"]);
                   map.addSource(layer.id, {
                     type: layer["data-type"],
                     data: data, // Use the resolved data here
@@ -159,17 +166,41 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
 
               if (layer.mouseEvent) {
                 layer.mouseEvent.forEach((event) => {
-                  map.on(event.type, layer["id"], (e) => {
+                  map.on(event.type, layer.id, (e) => {
                     const popupContent = event.content
                       .map((tag) => {
                         const tagName = Object.keys(tag)[0];
-                        const value =
-                          typeof tag[tagName] === "function"
-                            ? tag[tagName](e)
-                            : tag[tagName];
+
+                        // Generate the inner content by mapping over each item in the array
+                        const value = tag[tagName]
+                          .map((item: { [key: string]: string | { property?: string; else?: string; str?: string; href?: string; text?: string; src?: string; alt?: string } }) => {
+                            if ("property" in item) {
+                              return e.features && e.features[0]
+                                ? e.features[0].properties[item.property as string] ||
+                                    item.else
+                                : item.else;
+                            } else if ("str" in item) {
+                              return item.str;
+                            } else if (
+                              tagName === "a" &&
+                              "href" in item &&
+                              "text" in item
+                            ) {
+                              // Handle link tag with href and text
+                              return `<a href="${item.href}" target="_blank">${item.text}</a>`;
+                            } else if (tagName === "img" && "src" in item) {
+                              // Handle image tag with src and optional alt
+                              const altText = item.alt || "";
+                              return `<img src="${item.src}" alt="${altText}" />`;
+                            } else {
+                              return ""; // Fallback for any unexpected structure
+                            }
+                          })
+                          .join(" "); // Join all parts together to form the full tag content
+
                         return `<${tagName}>${value}</${tagName}>`;
                       })
-                      .join("");
+                      .join(" "); // Join all tags to form the full popup content
 
                     const popup = new maplibregl.Popup({ offset: 15 })
                       .setLngLat(e.lngLat)
