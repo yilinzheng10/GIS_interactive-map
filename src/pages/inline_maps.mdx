@@ -17,12 +17,10 @@ import { default as MapLibre } from "@components/MapLibre.astro";
         mapstyle="https://api.maptiler.com/maps/dataviz/style.json?key=WlatIY6MghFCwInJhBkl"
         containerstyle="width: 100%; height: 50vh"
         layers={[
-            { url:'https://data.cityofnewyork.us/resource/43nn-pn8j.geojson?cuisine_description=Pizza&$limit=10000', dataType:'geojson',layerType:'circle', id:'pizza', paint:{'circle-color':'#ff0000','circle-radius':5} },
-            { url:'https://data.cityofnewyork.us/resource/mzxg-pwib.geojson?$limit=10000', dataType:'geojson', layerType:'line', id:'bikes', paint:{'line-color':'#000000', 'line-width':3} },
-            
+            { url:'https://data.cityofnewyork.us/resource/43nn-pn8j.geojson?cuisine_description=Pizza&$limit=10000', 'data-type':'geojson','layer-type':'circle', id:'pizza', paint:{'circle-color':'#ff0000','circle-radius':5} },
+            { url:'https://data.cityofnewyork.us/resource/mzxg-pwib.geojson?$limit=10000', 'data-type':'geojson', 'layer-type':'line', id:'bikes', paint:{'line-color':'#000000', 'line-width':3} },
         ]}
     />
-
 
     ... and a static map
     <MapLibre
@@ -35,11 +33,12 @@ import { default as MapLibre } from "@components/MapLibre.astro";
         containerstyle="width: 100%; height: 256px"
     />
 
-    ## A subsection 
+    ## A subsection
     You can go into more detail here.
 
-    ### A further subsection 
-    And even more detail here. 
+    ### A further subsection
+    And even more detail here.
 
     </Container>
+
 </PageLayout>
