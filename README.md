@@ -8,7 +8,7 @@ Inline maps using MDX are shown in the `inline_maps.mdx` file in `/pages`. Withi
 Uses a YAML convention to pass arguments to the map object. Steps are defined in `pages/scrollytelling_steps.yaml`, which is invoked in `payes/scrolltelling.mdx`. That's where the initial position and map style should be defined. Otherwise text, images, etc. should be defined in the yaml file. I'd like to continue to add features to the steps, including passing the hidden variable, animation control, and more layer control. This is just a matter of copying the mapbox scrollytelling logic over. 
 
 ## Full page
-It would be nice to add a full-page view for anyone making a dashboard-style map. For this it would be important to get layer control and click/hover interaction settings working properly. No progress on this to-date.
+Full page maps are shown in the `full_page_map.mdx` file in `/pages`. This is a simple map that takes the same arguments as the inline map, but is rendered as a full page map. Layers are defined in the `_full_map_map_components.yaml` file in the `/components` directory.
 
 ### Full page map options
 
