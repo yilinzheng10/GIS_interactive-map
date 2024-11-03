@@ -88,7 +88,7 @@ const {
     class="maplibre-inline map-container"
     style={{ width: "100vw", height: "100vh" }}
   >
-  <nav id="menu"></nav>
+    <nav id="menu"></nav>
     <maplibre-map
       data-latitude={latitude}
       data-longitude={longitude}
@@ -134,19 +134,29 @@ const {
                 ? JSON.parse(this.dataset.layers)
                 : undefined;
               if (layers) {
-
-                // if layer is toggleable, make it so
+                // Add toggle buttons if set to be so
                 layers.forEach((layer: GeoJSONFeatureLayer) => {
                   if (layer.toggle) {
                     const toggleButton = document.createElement("a");
                     const menu = document.getElementById("menu");
                     toggleButton.textContent = layer.id;
-                    toggleButton.className = "active";
+                    if (layer.visible === true) {
+                      toggleButton.className = "active";
+                    }
                     toggleButton.onclick = () => {
-                      if (map.getLayoutProperty(layer.id, "visibility") === "visible") {
+                      if (
+                        map.getLayoutProperty(layer.id, "visibility") ===
+                        "visible"
+                      ) {
                         map.setLayoutProperty(layer.id, "visibility", "none");
+                        toggleButton.className = "";
                       } else {
-                        map.setLayoutProperty(layer.id, "visibility", "visible");
+                        map.setLayoutProperty(
+                          layer.id,
+                          "visibility",
+                          "visible"
+                        );
+                        toggleButton.className = "active";
                       }
                     };
                     menu.appendChild(toggleButton);
@@ -197,17 +207,19 @@ const {
                             type: layer["layer-type"],
                             source: layer.id,
                             paint: layer.paint,
+                            layout: {
+                              visibility: layer.visible ? "visible" : "none",
+                            },
                           });
                         }
                       });
 
                     // Handle mouse events if defined
                     if (layer.mouseEvent) {
-                        
                       const popup = new maplibregl.Popup({ offset: 15 });
-                    
+
                       layer.mouseEvent.forEach((event) => {
-                        map.on(event.type, layer.id, (e) => {                            
+                        map.on(event.type, layer.id, (e) => {
                           const popupContent = event.content
                             .map((tag) => {
                               const tagName = Object.keys(tag)[0];

@@ -234,10 +234,10 @@ section {
 }
 
 #menu a.active {
-  background-color: #3887be;
+  background-color: black;
   color: #ffffff;
 }
 
 #menu a.active:hover {
-  background: #3074a4;
+  background: rgb(236, 55, 19);
 }
