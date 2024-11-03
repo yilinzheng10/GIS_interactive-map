@@ -1,5 +1,6 @@
 - id: 'bikes'
-  toggle: true
+  label: 'Bike Lanes'
+  toggle: true  
   visible: false
   data-type: 'geojson'
   layer-type: 'line'
@@ -9,6 +10,7 @@
     line-width: 3
 
 - id: 'pizza'
+  label: 'Pizza Places'
   toggle: true
   visible: true
   data-type: 'geojson'

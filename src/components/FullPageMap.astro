@@ -42,6 +42,7 @@ export interface MapEvent {
 export interface GeoJSONFeatureLayer {
   "data-type": "geojson";
   id: string;
+  label?: string;
   url: string;
   toggle?: boolean;
   visible?: boolean;
@@ -139,7 +140,7 @@ const {
                   if (layer.toggle) {
                     const toggleButton = document.createElement("a");
                     const menu = document.getElementById("menu");
-                    toggleButton.textContent = layer.id;
+                    toggleButton.textContent = layer.label ?? layer.id;
                     if (layer.visible === true) {
                       toggleButton.className = "active";
                     }
