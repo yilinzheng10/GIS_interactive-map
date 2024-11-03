@@ -1,4 +1,6 @@
 - id: 'bikes'
+  toggle: true
+  visible: false
   data-type: 'geojson'
   layer-type: 'line'
   url: 'https://data.cityofnewyork.us/resource/mzxg-pwib.geojson?$limit=10000'
@@ -7,6 +9,8 @@
     line-width: 3
 
 - id: 'pizza'
+  toggle: true
+  visible: true
   data-type: 'geojson'
   layer-type: 'circle'
   url: 'https://data.cityofnewyork.us/resource/43nn-pn8j.geojson?cuisine_description=Pizza&$limit=10000'

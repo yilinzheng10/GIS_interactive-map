@@ -43,6 +43,8 @@ export interface GeoJSONFeatureLayer {
   "data-type": "geojson";
   id: string;
   url: string;
+  toggle?: boolean;
+  visible?: boolean;
   "layer-type":
     | "symbol"
     | "fill"
@@ -86,6 +88,7 @@ const {
     class="maplibre-inline map-container"
     style={{ width: "100vw", height: "100vh" }}
   >
+  <nav id="menu"></nav>
     <maplibre-map
       data-latitude={latitude}
       data-longitude={longitude}
@@ -131,6 +134,25 @@ const {
                 ? JSON.parse(this.dataset.layers)
                 : undefined;
               if (layers) {
+
+                // if layer is toggleable, make it so
+                layers.forEach((layer: GeoJSONFeatureLayer) => {
+                  if (layer.toggle) {
+                    const toggleButton = document.createElement("a");
+                    const menu = document.getElementById("menu");
+                    toggleButton.textContent = layer.id;
+                    toggleButton.className = "active";
+                    toggleButton.onclick = () => {
+                      if (map.getLayoutProperty(layer.id, "visibility") === "visible") {
+                        map.setLayoutProperty(layer.id, "visibility", "none");
+                      } else {
+                        map.setLayoutProperty(layer.id, "visibility", "visible");
+                      }
+                    };
+                    menu.appendChild(toggleButton);
+                  }
+                });
+
                 layers.forEach((layer: GeoJSONFeatureLayer) => {
                   if (layer["data-type"] === "geojson") {
                     fetch(layer.url)
