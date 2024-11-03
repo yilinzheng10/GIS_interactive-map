@@ -165,6 +165,7 @@ const layersJson = JSON.stringify(layers, customReplacer);
                 });
 
               if (layer.mouseEvent) {
+                const popup = new maplibregl.Popup({ offset: 15 });
                 layer.mouseEvent.forEach((event) => {
                   map.on(event.type, layer.id, (e) => {
                     const popupContent = event.content
@@ -217,13 +218,18 @@ const layersJson = JSON.stringify(layers, customReplacer);
                       })
                       .join(" "); // Join all tags to form the full popup content
 
-                    const popup = new maplibregl.Popup({ offset: 15 })
-                      .setLngLat(e.lngLat)
-                      .setHTML(popupContent)
-                      .addTo(map);
+                    popup.setLngLat(e.lngLat).setHTML(popupContent).addTo(map);
 
                     // Optional: call the callback if specified
                     if (event.callback) event.callback(e);
+
+                      // if event is mouseover, add a mouseout event to remove the popup
+                      if (event.type === "mousemove") {
+                        map.on("mouseleave", layer.id, () => {
+                          popup.remove();
+                        });
+                      }
+
                   });
                 });
               }
