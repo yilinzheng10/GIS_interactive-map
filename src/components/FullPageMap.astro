@@ -36,7 +36,6 @@ export interface MapEvent {
   content: Array<{
     [key: string]: string | ((e: maplibregl.MapLayerMouseEvent) => string);
   }>;
-  callback?: (e: maplibregl.MapLayerMouseEvent) => void;
 }
 
 export interface GeoJSONFeatureLayer {

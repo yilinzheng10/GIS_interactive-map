@@ -50,7 +50,7 @@ Baseline map options. Note that map layers are added via the `_full_map_map_comp
 |------------|--------------|----------|-------------------------------------------------------------------------------------------------------------------|-----------------------------------------|
 | `type`     | `string`     | Yes      | Type of mouse event to listen for. Options include `"click"`, `"mousemove"`, `"mouseenter"`, `"mouseleave"`.      | `"click"`                               |
 | `content`  | `array`      | Yes      | Array of elements to display in the popup. Each item is an object containing a tag (`h1`, `p`, etc.) and content. | `[ { "h1": [{ "str": "Feature Info" }] } ]` |
-| `callback` | `function`   | No       | Optional callback function triggered on the event.                                                                | `(e) => console.log(e)`                 |
+
 
 #### `content` Format
 
