@@ -49,7 +49,7 @@ Baseline map options. Note that map layers are added via the `_full_map_map_comp
 | Property   | Type         | Required | Description                                                                                                       | Example Value                           |
 |------------|--------------|----------|-------------------------------------------------------------------------------------------------------------------|-----------------------------------------|
 | `type`     | `string`     | Yes      | Type of mouse event to listen for. Options include `"click"`, `"mousemove"`, `"mouseenter"`, `"mouseleave"`.      | `"click"`                               |
-| `content`  | `array`      | Yes      | Array of elements to display in the popup. Each item is an object containing a tag (`h1`, `p`, etc.) and content. | `[ { "h1": [{ "str": "Feature Info" }] } ]` |
+| `content`  | `array`      | Yes      | Array of elements to display in the popup. Each item is an object containing a tag (`h1`, `p`, etc.) and content. You can pass multiple tags together to position feature attributes between text, etc. | `[ { "h1": [{ "str": "Feature Info" }] } ]` |
 
 
 #### `content` Format
@@ -59,7 +59,7 @@ Each item in the `content` array in `mouseEvent` consists of a tag and a list of
 | Property   | Type          | Required | Description                                      | Example Value                      |
 |------------|---------------|----------|--------------------------------------------------|------------------------------------|
 | `str`      | `string`      | No       | Static text to display.                          | `"Feature Info"`                   |
-| `property` | `string`      | No       | Property key to retrieve from feature properties.| `"dba"`                            |
+| `property` | `string`      | No       | Property key to retrieve from feature properties.| `"dba"`. Must match an attribute name in `features[0].properties`                            |
 | `else`     | `string`      | No       | Fallback text if the property value is unavailable. | `"N/A"`                        |
 | `href`     | `string`      | No       | Link URL (used only with `<a>` tags).            | `"https://example.com"`            |
 | `text`     | `string`      | No       | Text for the link (used only with `<a>` tags).   | `"More info"`                      |
