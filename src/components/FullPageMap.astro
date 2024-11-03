@@ -159,7 +159,9 @@ const {
                         toggleButton.className = "active";
                       }
                     };
-                    menu.appendChild(toggleButton);
+                    if (menu) {
+                      menu.appendChild(toggleButton);
+                    }
                   }
                 });
 
@@ -205,8 +207,10 @@ const {
                           map.addLayer({
                             id: layer.id,
                             type: layer["layer-type"],
+                            // @ts-expect-error expect source to be string via source above
                             source: layer.id,
-                            paint: layer.paint,
+                            // @ts-expect-error expect partial paint defs
+                            paint: layer.paint || {}, // Include paint if it exists
                             layout: {
                               visibility: layer.visible ? "visible" : "none",
                             },
@@ -275,9 +279,6 @@ const {
                             .setLngLat(e.lngLat)
                             .setHTML(popupContent)
                             .addTo(map);
-
-                          // Optional: call the callback if specified
-                          if (event.callback) event.callback(e);
 
                           // If event is mouseover, add a mouseout event to remove the popup
                           if (event.type === "mousemove") {
