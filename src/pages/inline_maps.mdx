@@ -3,7 +3,14 @@ import PageLayout from "@layouts/PageLayout.astro";
 import { SITE } from "@consts";
 import { default as MapLibre } from "@components/MapLibre.astro";
 
-<PageLayout title={"Inline Maps Demo"} description={SITE.description}>
+/* import all images you would like to use in line here */
+
+import fiskImg from "../assets/img/fisk02.jpg"
+
+
+
+<PageLayout title={SITE.title} description={SITE.description}>
+
     <Container>
     # My Project
     
@@ -33,11 +40,19 @@ import { default as MapLibre } from "@components/MapLibre.astro";
         containerstyle="width: 100%; height: 256px"
     />
 
-    ## A subsection
+    ... and a static map from an image you have composed 
+
+    /* To add static images from a jpg or png file use the syntax below*/
+    /* you must include the reference name that corresponds to the file path you have listed above */
+    <img src={fiskImg.src} alt="image description" />
+
+    ## A subsection 
+
     You can go into more detail here.
 
     ### A further subsection
     And even more detail here.
+
 
     </Container>
 

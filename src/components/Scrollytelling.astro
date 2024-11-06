@@ -12,7 +12,7 @@ import yaml from "js-yaml";
 
 // Load and parse the YAML file
 const fileContents = fs.readFileSync(
-  "src/pages/scrollytelling_steps.yaml",
+  "src/pages/_scrollytelling_steps.yaml",
   "utf8"
 );
 interface MapStep {
@@ -46,7 +46,7 @@ export interface Props {
 }
 
 export interface GeoJSONFeatureLayer {
-  dataType: "geojson";
+  "data-type": "geojson";
   id: string;
   url: string;
   layerType:
