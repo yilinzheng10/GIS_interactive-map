@@ -227,49 +227,52 @@ const {
                           const popupContent = event.content
                             .map((tag) => {
                               const tagName = Object.keys(tag)[0];
-                              const value = tag[tagName]
-                                .map(
-                                  (item: {
-                                    [key: string]:
-                                      | string
-                                      | {
-                                          property?: string;
-                                          else?: string;
-                                          str?: string;
-                                          href?: string;
-                                          text?: string;
-                                          src?: string;
-                                          alt?: string;
-                                        };
-                                  }) => {
-                                    if ("property" in item) {
-                                      return e.features && e.features[0]
-                                        ? e.features[0].properties[
-                                            item.property as string
-                                          ] || item.else
-                                        : item.else;
-                                    } else if ("str" in item) {
-                                      return item.str;
-                                    } else if (
-                                      tagName === "a" &&
-                                      "href" in item &&
-                                      "text" in item
-                                    ) {
-                                      // Handle link tag with href and text
-                                      return `<a href="${item.href}" target="_blank">${item.text}</a>`;
-                                    } else if (
-                                      tagName === "img" &&
-                                      "src" in item
-                                    ) {
-                                      // Handle image tag with src and optional alt
-                                      const altText = item.alt || "";
-                                      return `<img src="${item.src}" alt="${altText}" />`;
-                                    } else {
-                                      return ""; // Fallback for any unexpected structure
-                                    }
-                                  }
-                                )
-                                .join(" "); // Join all parts together to form the full tag content
+                              console.log(tag[tagName]);
+                              const value = Array.isArray(tag[tagName])
+                                ? tag[tagName]
+                                    .map(
+                                      (item: {
+                                        [key: string]:
+                                          | string
+                                          | {
+                                              property?: string;
+                                              else?: string;
+                                              str?: string;
+                                              href?: string;
+                                              text?: string;
+                                              src?: string;
+                                              alt?: string;
+                                            };
+                                      }) => {
+                                        if ("property" in item) {
+                                          return e.features && e.features[0]
+                                            ? e.features[0].properties[
+                                                item.property as string
+                                              ] || item.else
+                                            : item.else;
+                                        } else if ("str" in item) {
+                                          return item.str;
+                                        } else if (
+                                          tagName === "a" &&
+                                          "href" in item &&
+                                          "text" in item
+                                        ) {
+                                          // Handle link tag with href and text
+                                          return `<a href="${item.href}" target="_blank">${item.text}</a>`;
+                                        } else if (
+                                          tagName === "img" &&
+                                          "src" in item
+                                        ) {
+                                          // Handle image tag with src and optional alt
+                                          const altText = item.alt || "";
+                                          return `<img src="${item.src}" alt="${altText}" />`;
+                                        } else {
+                                          return ""; // Fallback for any unexpected structure
+                                        }
+                                      }
+                                    )
+                                    .join(" ") // Join all parts together to form the full tag content
+                                : tag[tagName];
 
                               return `<${tagName}>${value}</${tagName}>`;
                             })
