@@ -6,6 +6,7 @@ import type {
   CircleLayerSpecification,
   LineLayerSpecification,
   SymbolLayerSpecification,
+  MapLayerMouseEvent,
 } from "maplibre-gl";
 
 export interface Props {
@@ -43,6 +44,15 @@ export interface GeoJSONFeatureLayer {
     | LineLayerSpecification
     | CircleLayerSpecification
     | SymbolLayerSpecification;
+  mouseEvent?: MapEvent[];
+}
+
+export interface MapEvent {
+  type: "click" | "mousemove" | "mouseenter" | "mouseleave";
+  content: Array<{
+    [key: string]: string | ((e: maplibregl.MapLayerMouseEvent) => string);
+  }>;
+  callback?: (e: maplibregl.MapLayerMouseEvent) => void;
 }
 
 const {
@@ -57,7 +67,15 @@ const {
   bearing,
   layers,
 } = Astro.props;
-const layersJson = layers ? JSON.stringify(layers) : undefined;
+
+const customReplacer = (key, value) => {
+  if (typeof value === "function") {
+    return `(${value.toString()})`; // Wrap the function in parentheses
+  }
+  return value;
+};
+
+const layersJson = JSON.stringify(layers, customReplacer);
 ---
 
 <maplibre-map
@@ -81,16 +99,10 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
   {
     /* Astro specific way to pull in MapLibre, `is:inline`:  https://docs.astro.build/en/reference/directives-reference/#isinline */
   }
-  
-  
 
   <script>
-    import type {
-      CircleLayerSpecification,
-      FillLayerSpecification,
-      LineLayerSpecification,
-      SymbolLayerSpecification,
-    } from "maplibre-gl";
+    import maplibregl from "maplibre-gl";
+    import type { GeoJSONFeatureLayer } from "./MapLibre.astro";
 
     class MapLibreMap extends HTMLElement {
       constructor() {
@@ -99,7 +111,9 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
         // eslint-disable-next-line no-undef
         var map = new maplibregl.Map({
           container: this.dataset.container || "maplibre-map",
-          interactive: this.dataset.interactive ? JSON.parse(this.dataset.interactive) : false,
+          interactive: this.dataset.interactive
+            ? JSON.parse(this.dataset.interactive)
+            : false,
           center: [
             this.dataset.longitude ? parseFloat(this.dataset.longitude) : 0,
             this.dataset.latitude ? parseFloat(this.dataset.latitude) : 0,
@@ -112,66 +126,114 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
           if (this.dataset.layers) {
             const layers = JSON.parse(this.dataset.layers);
 
-            layers.forEach(
-              (layer: {
-                dataType: "geojson";
-                url: string | URL | Request;
-                id: string;
-                layerType:
-                  | "symbol"
-                  | "fill"
-                  | "custom"
-                  | "raster"
-                  | "line"
-                  | "circle"
-                  | "heatmap"
-                  | "fill-extrusion"
-                  | "hillshade"
-                  | "background";
-                paint:
-                  | FillLayerSpecification
-                  | LineLayerSpecification
-                  | CircleLayerSpecification
-                  | SymbolLayerSpecification;
-              }) => {
-                fetch(layer.url)
-                  .then((res) => res.json())
-                  .then((data) => {
-                    // Modify the data to fit the expected format  
-                    data.features.forEach(
-                      (feature: {
-                        geometry: { type: string; coordinates: number[] };
-                        properties: { longitude: number; latitude: number };
-                      }) => {
-                        // check if there's already a valid geometry, otherwise reconstruct it
-                        if (!feature.geometry) {
-                          feature.geometry = {
-                            type: "Point",
-                            coordinates: [
-                              Number(feature.properties.longitude),
-                              Number(feature.properties.latitude),
-                            ],
-                          };
-                        }
+            layers.forEach((layer: GeoJSONFeatureLayer) => {
+              fetch(layer.url)
+                .then((res) => res.json())
+                .then((data) => {
+                  // Modify the data to fit the expected format
+                  data.features.forEach(
+                    (feature: {
+                      geometry: { type: string; coordinates: number[] };
+                      properties: { longitude: number; latitude: number };
+                    }) => {
+                      // check if there's already a valid geometry, otherwise reconstruct it
+                      if (!feature.geometry) {
+                        feature.geometry = {
+                          type: "Point",
+                          coordinates: [
+                            Number(feature.properties.longitude),
+                            Number(feature.properties.latitude),
+                          ],
+                        };
                       }
-                    );
-                    // Add the source and layer to the map
-                    map.addSource(layer.id, {
-                      type: layer.dataType,
-                      data: data, // Use the resolved data here
-                    });
-
-                    map.addLayer({
-                      id: layer.id,
-                      type: layer.layerType,
-                      // @ts-expect-error expect source to be string via source above
-                      source: layer.id,
-                      // @ts-expect-error expect partial paint defs
-                      paint: layer.paint || {}, // Include paint if it exists
-                    });
+                    }
+                  );
+                  // Add the source and layer to the map
+                  map.addSource(layer.id, {
+                    type: layer["data-type"],
+                    data: data, // Use the resolved data here
                   });
+
+                  map.addLayer({
+                    id: layer.id,
+                    type: layer["layer-type"],
+                    // @ts-expect-error expect source to be string via source above
+                    source: layer.id,
+                    // @ts-expect-error expect partial paint defs
+                    paint: layer.paint || {}, // Include paint if it exists
+                  });
+                });
+
+              if (layer.mouseEvent) {
+                const popup = new maplibregl.Popup({ offset: 15 });
+                layer.mouseEvent.forEach((event) => {
+                  map.on(event.type, layer.id, (e) => {
+                    const popupContent = event.content
+                      .map((tag) => {
+                        const tagName = Object.keys(tag)[0];
+
+                        // Generate the inner content by mapping over each item in the array
+                        const value = tag[tagName]
+                          .map(
+                            (item: {
+                              [key: string]:
+                                | string
+                                | {
+                                    property?: string;
+                                    else?: string;
+                                    str?: string;
+                                    href?: string;
+                                    text?: string;
+                                    src?: string;
+                                    alt?: string;
+                                  };
+                            }) => {
+                              if ("property" in item) {
+                                return e.features && e.features[0]
+                                  ? e.features[0].properties[
+                                      item.property as string
+                                    ] || item.else
+                                  : item.else;
+                              } else if ("str" in item) {
+                                return item.str;
+                              } else if (
+                                tagName === "a" &&
+                                "href" in item &&
+                                "text" in item
+                              ) {
+                                // Handle link tag with href and text
+                                return `<a href="${item.href}" target="_blank">${item.text}</a>`;
+                              } else if (tagName === "img" && "src" in item) {
+                                // Handle image tag with src and optional alt
+                                const altText = item.alt || "";
+                                return `<img src="${item.src}" alt="${altText}" />`;
+                              } else {
+                                return ""; // Fallback for any unexpected structure
+                              }
+                            }
+                          )
+                          .join(" "); // Join all parts together to form the full tag content
+
+                        return `<${tagName}>${value}</${tagName}>`;
+                      })
+                      .join(" "); // Join all tags to form the full popup content
+
+                    popup.setLngLat(e.lngLat).setHTML(popupContent).addTo(map);
+
+                    // Optional: call the callback if specified
+                    if (event.callback) event.callback(e);
+
+                      // if event is mouseover, add a mouseout event to remove the popup
+                      if (event.type === "mousemove") {
+                        map.on("mouseleave", layer.id, () => {
+                          popup.remove();
+                        });
+                      }
+
+                  });
+                });
               }
-            );
+            });
           }
         });
       }
