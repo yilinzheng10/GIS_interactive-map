@@ -1,5 +1,5 @@
 # astro-maplibre-template
-basic template for astro and maplibre.
+Basic template for astro and maplibre, with inline, full page, and scrollytelling maps.
 
 
 ## 💻 Commands
