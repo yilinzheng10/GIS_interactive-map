@@ -72,7 +72,7 @@ const {
 const layersJson = JSON.stringify(layers);
 ---
 
-<maplibre-map
+<maplibre-map-inline
   data-latitude={latitude}
   data-longitude={longitude}
   data-zoom={zoom}
@@ -103,7 +103,7 @@ const layersJson = JSON.stringify(layers);
         super();        
         // eslint-disable-next-line no-undef
         var map = new maplibregl.Map({
-          container: this.dataset.container || "maplibre-map",
+          container: this.dataset.container || "maplibre-map-inline",
           interactive: this.dataset.interactive
             ? JSON.parse(this.dataset.interactive)
             : false,
@@ -231,6 +231,6 @@ const layersJson = JSON.stringify(layers);
       }
     }
 
-    window.customElements.define("maplibre-map", MapLibreMap);
-  </script></maplibre-map
+    window.customElements.define("maplibre-map-inline", MapLibreMap);
+  </script></maplibre-map-inline
 >
