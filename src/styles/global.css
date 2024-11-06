@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles */
+:root {
+  --bg-color: rgba(255, 255, 255, 0.9); /* Light mode */
+  --text-color: #333; /* Darker text for light mode */
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: rgba(40, 40, 40, 0.9); /* Dark background */
+    --text-color: #eee; /* Lighter text for dark mode */
+  }
+}
+
 html {
   overflow-y: scroll;
   color-scheme: light;
@@ -195,10 +209,12 @@ section {
 .step-content { 
   width: 100%;
   padding: 20px;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
 
 #menu {
   background: #fff;
