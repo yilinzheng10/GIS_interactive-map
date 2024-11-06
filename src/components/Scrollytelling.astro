@@ -153,8 +153,6 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
                         : undefined;
                       if (layers) {
                         layers.forEach((layer: GeoJSONFeatureLayer) => {
-                          
-
                           if (layer["data-type"] === "geojson") {
                             fetch(layer.url)
                               .then((response) => response.json())
@@ -195,8 +193,10 @@ const layersJson = layers ? JSON.stringify(layers) : undefined;
                                   map.addLayer({
                                     id: layer.id,
                                     type: layer["layer-type"],
+                                    // @ts-expect-error expect source to be string via source above
                                     source: layer.id,
-                                    paint: layer.paint,
+                                    // @ts-expect-error expect partial paint defs
+                                    paint: layer.paint || {},
                                   });
                                 }
                               });
