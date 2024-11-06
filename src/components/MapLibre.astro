@@ -68,14 +68,8 @@ const {
   layers,
 } = Astro.props;
 
-const customReplacer = (key, value) => {
-  if (typeof value === "function") {
-    return `(${value.toString()})`; // Wrap the function in parentheses
-  }
-  return value;
-};
 
-const layersJson = JSON.stringify(layers, customReplacer);
+const layersJson = JSON.stringify(layers);
 ---
 
 <maplibre-map
@@ -106,8 +100,7 @@ const layersJson = JSON.stringify(layers, customReplacer);
 
     class MapLibreMap extends HTMLElement {
       constructor() {
-        super();
-        // @ts-expect-error this is the proper import and reference method
+        super();        
         // eslint-disable-next-line no-undef
         var map = new maplibregl.Map({
           container: this.dataset.container || "maplibre-map",
@@ -173,8 +166,7 @@ const layersJson = JSON.stringify(layers, customReplacer);
                         const tagName = Object.keys(tag)[0];
 
                         // Generate the inner content by mapping over each item in the array
-                        const value = tag[tagName]
-                          .map(
+                        const value = Array.isArray(tag[tagName]) ? tag[tagName].map(
                             (item: {
                               [key: string]:
                                 | string
@@ -212,7 +204,7 @@ const layersJson = JSON.stringify(layers, customReplacer);
                               }
                             }
                           )
-                          .join(" "); // Join all parts together to form the full tag content
+                          .join(" ") :  [tag[tagName]]; // Join all parts together to form the full tag content
 
                         return `<${tagName}>${value}</${tagName}>`;
                       })
