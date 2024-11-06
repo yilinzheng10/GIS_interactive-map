@@ -89,7 +89,7 @@ const {
     style={{ width: "100vw", height: "100vh" }}
   >
     <nav id="menu"></nav>
-    <maplibre-map
+    <maplibre-fullpage-map
       data-latitude={latitude}
       data-longitude={longitude}
       data-zoom={zoom}
@@ -299,8 +299,8 @@ const {
           }
         }
 
-        window.customElements.define("maplibre-map", MapLibreFullPageMap);
+        window.customElements.define("maplibre-fullpage-map", MapLibreFullPageMap);
       </script>
-    </maplibre-map>
+    </maplibre-fullpage-map>
   </div>
 </div>
