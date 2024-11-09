@@ -19,7 +19,10 @@ async function updatePaths(basePath) {
         content = content.replace(/href="\.\//g, `href="${basePath}/`)
             .replace(/src="\.\//g, `src="${basePath}/`);
 
+        // account for rel paths in the data-mapstyle attribute as well
+        const dataMapstyleRegex = /data-mapstyle="([^"]*)"/g;
         const dataLayersRegex = /data-layers="([^"]*)"/g;
+        
         content = content.replace(dataLayersRegex, (match, jsonStr) => {
             try {
                 // Decode the JSON-like string
@@ -38,6 +41,28 @@ async function updatePaths(basePath) {
                 // Re-encode the updated JSON with escaped double quotes
                 const encoded = JSON.stringify(updatedLayers).replace(/"/g, "&quot;");
                 return `data-layers="${encoded}"`;
+            } catch (error) {
+                console.error(`Failed to parse data-layers JSON in file ${filePath}:`, error);
+                return match; // Return original if parsing fails
+            }
+        }).replace(dataMapstyleRegex, (match, jsonStr) => {
+            try {
+                // Decode the JSON-like string
+                const decoded = JSON.parse(
+                    jsonStr.replace(/&quot;/g, "\"").replace(/&#34;/g, "\"")
+                );
+
+                // Update each layer's URL if it’s a relative path
+                const updatedLayers = decoded.map(layer => {
+                    if (layer.url && layer.url.startsWith("./")) {
+                        layer.url = `${basePath}${layer.url.slice(1)}`; // Remove './' and prepend base path
+                    }
+                    return layer;
+                });
+
+                // Re-encode the updated JSON with escaped double quotes
+                const encoded = JSON.stringify(updatedLayers).replace(/"/g, "&quot;");
+                return `data-mapstyle="${encoded}"`;
             } catch (error) {
                 console.error(`Failed to parse data-layers JSON in file ${filePath}:`, error);
                 return match; // Return original if parsing fails
