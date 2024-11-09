@@ -16,62 +16,48 @@ async function updatePaths(basePath) {
 
     function updateFilePaths(filePath) {
         let content = readFileSync(filePath, "utf8");
-        content = content.replace(/href="\.\//g, `href="${basePath}/`)
-            .replace(/src="\.\//g, `src="${basePath}/`);
 
-        // account for rel paths in the data-mapstyle attribute as well
-        const dataMapstyleRegex = /data-mapstyle="([^"]*)"/g;
+        // Update href and src attributes for base path
+        content = content.replace(/href="\.\//g, `href="${basePath}/`)
+                         .replace(/src="\.\//g, `src="${basePath}/`);
+
+        // Regex for matching data-layers and data-mapstyle attributes
         const dataLayersRegex = /data-layers="([^"]*)"/g;
-        
+        const dataMapstyleRegex = /data-mapstyle="([^"]*)"/g;
+
+        // Update data-layers JSON URLs
         content = content.replace(dataLayersRegex, (match, jsonStr) => {
             try {
-                // Decode the JSON-like string
-                const decoded = JSON.parse(
+                const decodedLayers = JSON.parse(
                     jsonStr.replace(/&quot;/g, "\"").replace(/&#34;/g, "\"")
                 );
 
-                // Update each layer's URL if it’s a relative path
-                const updatedLayers = decoded.map(layer => {
+                const updatedLayers = decodedLayers.map(layer => {
                     if (layer.url && layer.url.startsWith("./")) {
-                        layer.url = `${basePath}${layer.url.slice(1)}`; // Remove './' and prepend base path
+                        layer.url = `${basePath}${layer.url.slice(1)}`;
                     }
                     return layer;
                 });
 
-                // Re-encode the updated JSON with escaped double quotes
-                const encoded = JSON.stringify(updatedLayers).replace(/"/g, "&quot;");
-                return `data-layers="${encoded}"`;
+                const encodedLayers = JSON.stringify(updatedLayers).replace(/"/g, "&quot;");
+                return `data-layers="${encodedLayers}"`;
             } catch (error) {
                 console.error(`Failed to parse data-layers JSON in file ${filePath}:`, error);
                 return match; // Return original if parsing fails
             }
-        }).replace(dataMapstyleRegex, (match, jsonStr) => {
-            try {
-                // Decode the JSON-like string
-                const decoded = JSON.parse(
-                    jsonStr.replace(/&quot;/g, "\"").replace(/&#34;/g, "\"")
-                );
-
-                // Update each layer's URL if it’s a relative path
-                const updatedLayers = decoded.map(layer => {
-                    if (layer.url && layer.url.startsWith("./")) {
-                        layer.url = `${basePath}${layer.url.slice(1)}`; // Remove './' and prepend base path
-                    }
-                    return layer;
-                });
-
-                // Re-encode the updated JSON with escaped double quotes
-                const encoded = JSON.stringify(updatedLayers).replace(/"/g, "&quot;");
-                return `data-mapstyle="${encoded}"`;
-            } catch (error) {
-                console.error(`Failed to parse data-mapstyle JSON in file ${filePath}:`, error);
-                return match; // Return original if parsing fails
-            }
         });
+
+        // Update data-mapstyle if it contains a relative URL
+        content = content.replace(dataMapstyleRegex, (match, urlStr) => {
+            if (urlStr.startsWith("./")) {
+                const updatedUrl = `${basePath}${urlStr.slice(1)}`;
+                return `data-mapstyle="${updatedUrl}"`;
+            }
+            return match; // Return original if not a relative path
+        });
+
         writeFileSync(filePath, content, "utf8");
     }
-
-
 
     function processDirectory(dir) {
         readdirSync(dir).forEach((file) => {
