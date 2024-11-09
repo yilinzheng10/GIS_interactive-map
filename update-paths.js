@@ -64,7 +64,7 @@ async function updatePaths(basePath) {
                 const encoded = JSON.stringify(updatedLayers).replace(/"/g, "&quot;");
                 return `data-mapstyle="${encoded}"`;
             } catch (error) {
-                console.error(`Failed to parse data-layers JSON in file ${filePath}:`, error);
+                console.error(`Failed to parse data-mapstyle JSON in file ${filePath}:`, error);
                 return match; // Return original if parsing fails
             }
         });
