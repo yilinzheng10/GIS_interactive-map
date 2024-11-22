@@ -51,3 +51,32 @@
             - str: "Fur color: "
             - property: "primary_fur_color"
               else: "N/A"
+
+- id: 'trees'
+  label: '2015 Street Tree Census'
+  toggle: true
+  visible: true
+  data-type: 'geojson'
+  layer-type: 'circle'
+  url: './data/2015_Street_Tree_Census_subset_um.geojson'
+  paint:
+    circle-color: [
+      'step',
+      ['get','tree_dbh'],
+      '#5ef787', ##color for all values < first value
+      3, '#4ecf71', ##value, color,
+      8, '#3a9c54',
+      12, '#286b3a',
+      15, '#173d21',
+      25, '#1b3622',
+      ]
+    circle-radius: [
+      'step',
+      ['get','tree_dbh'],
+      .5, ## size for all values < first value
+      3, 1, ##value, size,
+      8, 2,
+      12, 3,
+      15, 4,
+      25, 5,
+      ]
