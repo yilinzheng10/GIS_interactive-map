@@ -5,7 +5,7 @@ import sitemap from "@astrojs/sitemap";
 import tailwind from "@astrojs/tailwind";
 
 export default defineConfig({
-  site: "https://yilinzheng10.github.io/GIS_interactive-map/",
-  base: "astro-maplibre-template",
+  site: "https://yilinzheng10.github.io",
+  base: "GIS_interactive-map",
   integrations: [mdx(), sitemap(), tailwind()],
 });
